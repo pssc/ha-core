@@ -24,7 +24,6 @@ from .const import (
 SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=STATUS_SENSOR_RESCAN,
-        entity_registry_visible_default=False,
         device_class = BinarySensorDeviceClass.RUNNING,
     ),
     BinarySensorEntityDescription(
@@ -61,16 +60,15 @@ class ServerStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
         super().__init__(coordinator, context=description.key)
         self.coordinator = coordinator
         self.entity_description = description
-        self._sensor = description.key
         self._attr_device_info = device
-        self._attr_is_on = self.coordinator.data[self._sensor]
-        self._attr_name = self._sensor
+        self._attr_is_on = self.coordinator.data[description.key]
+        self._attr_name = description.key
         self._attr_unique_id = device["serial_number"]
         self._attr_unique_id += description.key
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = self.coordinator.data[self._sensor]
-        _LOGGER.debug("Update %s=%s", self._sensor, self._attr_is_on)
+        self._attr_is_on = self.coordinator.data[self.entity_description.key]
         self.async_write_ha_state()
+        _LOGGER.debug("Update %s=%s", self.entity_description.key, self._attr_is_on)
