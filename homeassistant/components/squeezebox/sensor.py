@@ -54,7 +54,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     STATUS_SENSOR_INFO_TOTAL_GENRES: SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_GENRES,
         state_class = SensorStateClass.TOTAL,
-        icon = "mdi:music-box-multiple" ,
+        icon = "mdi:drama-masks" ,
     ),
     STATUS_SENSOR_INFO_TOTAL_SONGS: SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_SONGS,
