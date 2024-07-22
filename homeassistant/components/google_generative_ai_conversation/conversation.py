@@ -6,7 +6,7 @@ import codecs
 from collections.abc import Callable
 from typing import Any, Literal
 
-from google.api_core.exceptions import GoogleAPICallError
+from google.api_core.exceptions import GoogleAPIError
 import google.generativeai as genai
 from google.generativeai import protos
 import google.generativeai.types as genai_types
@@ -81,6 +81,8 @@ def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
             key = "type_"
             val = val.upper()
         elif key == "format":
+            if schema.get("type") == "string" and val != "enum":
+                continue
             key = "format_"
         elif key == "items":
             val = _format_schema(val)
@@ -278,7 +280,7 @@ class GoogleGenerativeAIConversationEntity(
             try:
                 chat_response = await chat.send_message_async(chat_request)
             except (
-                GoogleAPICallError,
+                GoogleAPIError,
                 ValueError,
                 genai_types.BlockedPromptException,
                 genai_types.StopCandidateException,
