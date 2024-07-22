@@ -75,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     lms.uuid = status[STATUS_QUERY_UUID]
     lms.name = (STATUS_QUERY_LIBRARYNAME in status and status[STATUS_QUERY_LIBRARYNAME]) and status[STATUS_QUERY_LIBRARYNAME] or host
-    _LOGGER.info("LMS %s = '%s' with uuid = %a ", lms.name, host, lms.uuid)
+    _LOGGER.info("LMS %s = '%s' with uuid = %s ", lms.name, host, lms.uuid)
 
     device = DeviceInfo(
             identifiers={
@@ -97,8 +97,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id][DATA_SERVER] = lms
 
     await coordinator.async_config_entry_first_refresh()
-    # Make sure data is present before we add the sensors as always_update is false then the data doesnt chanage and the entities dont get updated.
-    # we call the update funcion in object init
+    # Make sure data is present before we add the server status sensors
+    # As always_update is false the data doesnt chanage and the entities don't get a value
+    # unless we set the value at sensor init.
     # If the refresh fails, async_config_entry_first_refresh will
     # raise ConfigEntryNotReady and setup will try again later
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -111,11 +112,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Reached async_unload_entry for LMS=%s(%s)", hass.data[DOMAIN][entry.entry_id][DATA_SERVER].name or "Unkown" ,entry.entry_id)
     hass.data[DOMAIN][entry.entry_id][PLAYER_DISCOVERY_UNSUB]()
 
-    # Remove redunant server/devices
+    # Remove redunant server/devices revmoves devices with no entities.
     device_reg = dr.async_get(hass)
     entity_reg = er.async_get(hass)
     for device_entry in dr.async_entries_for_config_entry(device_reg, entry.entry_id):
-            # Do any of the devices for this entry have any entities(event if disabled) if no delete
+            # Do any of the devices for this entry have any entities(even if disabled) if not delete
             items = entity_reg.entities.get_entries_for_device_id(device_entry.id,True)
             if not items:
                 _LOGGER.warning("Removing stale device %s", device_entry.name)
