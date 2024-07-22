@@ -61,8 +61,8 @@ class ServerStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self.coordinator = coordinator
         self.entity_description = description
         self._attr_device_info = device
-        self._attr_is_on = self.coordinator.data[description.key]
         self._attr_name = description.key
+        self._attr_is_on = coordinator.data[description.key]
         self._attr_unique_id = device["serial_number"]
         self._attr_unique_id += description.key
 
