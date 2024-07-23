@@ -122,9 +122,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _LOGGER.warning("Removing stale device %s", device_entry.name)
                 device_reg.async_remove_device(device_entry.id)
 
-    # Remove stored data for this config entry
-    hass.data[DOMAIN].pop(entry.entry_id)
-
     # Stop server discovery task if this is the last config entry.
     current_entries = hass.config_entries.async_entries(DOMAIN)
     if len(current_entries) == 1 and current_entries[0] == entry:
