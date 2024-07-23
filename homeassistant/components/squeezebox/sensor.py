@@ -34,29 +34,29 @@ from .const import (
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_ALBUMS,
-        state_class = SensorStateClass.TOTAL,
-        icon = "mdi:album",
+        state_class=SensorStateClass.TOTAL,
+        icon="mdi:album",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_ARTISTS,
-        state_class = SensorStateClass.TOTAL,
-        icon = "mdi:account-music",
+        state_class=SensorStateClass.TOTAL,
+        icon="mdi:account-music",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_DURATION,
-        state_class = SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_GENRES,
-        state_class = SensorStateClass.TOTAL,
-        icon = "mdi:drama-masks" ,
+        state_class=SensorStateClass.TOTAL,
+        icon="mdi:drama-masks",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_SONGS,
-        state_class = SensorStateClass.TOTAL,
-        icon = "mdi:file-music",
+        state_class=SensorStateClass.TOTAL,
+        icon="mdi:file-music",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_LASTSCAN,
@@ -72,14 +72,14 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_PLAYER_COUNT,
-        state_class = SensorStateClass.TOTAL,
-        icon = "mdi:folder-play",
+        state_class=SensorStateClass.TOTAL,
+        icon="mdi:folder-play",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_OTHER_PLAYER_COUNT,
-        state_class = SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL,
         entity_registry_visible_default=False,
-        icon = "mdi:folder-play-outline" ,
+        icon="mdi:folder-play-outline",
     ),
 )
 
@@ -97,8 +97,7 @@ async def async_setup_entry(
     device = entry.runtime_data[DATA_DEVICE]
 
     async_add_entities(
-        ServerStatusSensor(device, coordinator, description)
-        for description in SENSORS
+        ServerStatusSensor(device, coordinator, description) for description in SENSORS
     )
 
 
@@ -122,5 +121,7 @@ class ServerStatusSensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.native_value = self.coordinator.data[self.entity_description.key]
-        _LOGGER.debug("Update Sensor %s=%s", self.entity_description.key, self.native_value)
+        _LOGGER.debug(
+            "Update Sensor %s=%s", self.entity_description.key, self.native_value
+        )
         self.async_write_ha_state()

@@ -45,11 +45,14 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SENSOR, Platform.BINARY_SENSOR]
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an LMS Server from a config entry."""
     config = entry.data
     session = async_get_clientsession(hass)
-    _LOGGER.debug("Reached async_setup_entry for host=%s(%s)", config[CONF_HOST],entry.entry_id)
+    _LOGGER.debug(
+        "Reached async_setup_entry for host=%s(%s)", config[CONF_HOST], entry.entry_id
+    )
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -64,30 +67,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("LMS object for %s", lms)
 
     try:
-       async with timeout(STATUS_API_TIMEOUT):
-          status = await lms.async_query("serverstatus","-","-","prefs:libraryname")
+        async with timeout(STATUS_API_TIMEOUT):
+            status = await lms.async_query(
+                "serverstatus", "-", "-", "prefs:libraryname"
+            )
     except Exception as err:
-       raise ConfigEntryNotReady(f"Error communicating config not read for {host}") from err
+        raise ConfigEntryNotReady(
+            f"Error communicating config not read for {host}"
+        ) from err
 
     if not status:
-       raise ConfigEntryNotReady(f"Error Config Not read for {host}")
+        raise ConfigEntryNotReady(f"Error Config Not read for {host}")
     _LOGGER.debug("LMS Status for setup  = %s", status)
 
     lms.uuid = status[STATUS_QUERY_UUID]
-    lms.name = (STATUS_QUERY_LIBRARYNAME in status and status[STATUS_QUERY_LIBRARYNAME]) and status[STATUS_QUERY_LIBRARYNAME] or host
+    lms.name = (
+        (STATUS_QUERY_LIBRARYNAME in status and status[STATUS_QUERY_LIBRARYNAME])
+        and status[STATUS_QUERY_LIBRARYNAME]
+        or host
+    )
     _LOGGER.debug("LMS %s = '%s' with uuid = %s ", lms.name, host, lms.uuid)
 
     device = DeviceInfo(
-            identifiers={
-                (DOMAIN, lms.uuid)
-            },
-            name=lms.name,
-            manufacturer=MANUFACTURER,
-            model=SERVER_MODEL,
-            sw_version=STATUS_QUERY_VERSION in status and status[STATUS_QUERY_VERSION] or None,
-            serial_number=lms.uuid,
-            connections = STATUS_QUERY_MAC in status and {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))} or None,
-        )
+        identifiers={(DOMAIN, lms.uuid)},
+        name=lms.name,
+        manufacturer=MANUFACTURER,
+        model=SERVER_MODEL,
+        sw_version=STATUS_QUERY_VERSION in status
+        and status[STATUS_QUERY_VERSION]
+        or None,
+        serial_number=lms.uuid,
+        connections=STATUS_QUERY_MAC in status
+        and {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}
+        or None,
+    )
     _LOGGER.debug("LMS Device %s", device)
 
     coordinator = LMSStatusDataUpdateCoordinator(hass, lms)
@@ -109,17 +122,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     # Stop player discovery task for this config entry.
-    _LOGGER.debug("Reached async_unload_entry for LMS=%s(%s)", entry.runtime_data[DATA_SERVER].name or "Unkown" ,entry.entry_id)
+    _LOGGER.debug(
+        "Reached async_unload_entry for LMS=%s(%s)",
+        entry.runtime_data[DATA_SERVER].name or "Unkown",
+        entry.entry_id,
+    )
 
     # Remove redunant server/devices revmoves devices with no entities.
     device_reg = dr.async_get(hass)
     entity_reg = er.async_get(hass)
     for device_entry in dr.async_entries_for_config_entry(device_reg, entry.entry_id):
-            # Do any of the devices for this entry have any entities(even if disabled) if not delete
-            items = entity_reg.entities.get_entries_for_device_id(device_entry.id,True)
-            if not items:
-                _LOGGER.warning("Removing stale device %s", device_entry.name)
-                device_reg.async_remove_device(device_entry.id)
+        # Do any of the devices for this entry have any entities(even if disabled) if not delete
+        items = entity_reg.entities.get_entries_for_device_id(device_entry.id, True)
+        if not items:
+            _LOGGER.warning("Removing stale device %s", device_entry.name)
+            device_reg.async_remove_device(device_entry.id)
 
     # Stop server discovery task if this is the last config entry.
     current_entries = hass.config_entries.async_entries(DOMAIN)

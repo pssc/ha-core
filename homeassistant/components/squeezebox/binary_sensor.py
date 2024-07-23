@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 import logging
@@ -23,11 +24,11 @@ from .const import (
 SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=STATUS_SENSOR_RESCAN,
-        device_class = BinarySensorDeviceClass.RUNNING,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     BinarySensorEntityDescription(
         key=STATUS_SENSOR_NEEDSRESTART,
-        device_class = BinarySensorDeviceClass.UPDATE,
+        device_class=BinarySensorDeviceClass.UPDATE,
     ),
 )
 

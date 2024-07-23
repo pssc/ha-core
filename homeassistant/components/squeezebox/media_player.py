@@ -30,7 +30,7 @@ from homeassistant.helpers import (
     entity_platform,
 )
 
-#from homeassistant.helpers.aiohttp_client import async_get_clientsession
+# from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -145,7 +145,7 @@ async def async_setup_entry(
 
             if not entity:
                 _LOGGER.debug("Adding new entity: %s", player)
-                entity = SqueezeBoxEntity(player,lms)
+                entity = SqueezeBoxEntity(player, lms)
                 known_players.append(entity)
                 async_add_entities([entity])
 
@@ -153,11 +153,13 @@ async def async_setup_entry(
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
-         entry.async_on_unload(
+        entry.async_on_unload(
             async_call_later(hass, DISCOVERY_INTERVAL, _player_discovery)
         )
 
-    _LOGGER.debug("Adding player discovery job for LMS server: %s", entry.data[CONF_HOST])
+    _LOGGER.debug(
+        "Adding player discovery job for LMS server: %s", entry.data[CONF_HOST]
+    )
     entry.async_create_background_task(
         hass, _player_discovery(), "squeezebox.media_player.player_discovery"
     )
@@ -274,7 +276,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             if self.media_position != last_media_position:
                 self._last_update = utcnow()
             if self._player.connected is False:
-                _LOGGER.debug("Player %s is not available on %s", self.name,self._server.name)
+                _LOGGER.debug(
+                    "Player %s is not available on %s", self.name, self._server.name
+                )
                 self._attr_available = False
 
                 # start listening for restored players
@@ -562,7 +566,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                 await self._player.async_sync(other_player_id)
             else:
                 _LOGGER.error(
-                    "Could not find player_id for %s. Not syncing with %s", other_player, self._player
+                    "Could not find player_id for %s. Not syncing with %s",
+                    other_player,
+                    self._player,
                 )
 
     async def async_sync(self, other_player):
