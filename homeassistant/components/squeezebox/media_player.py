@@ -7,7 +7,7 @@ import json
 import logging
 from typing import Any
 
-from pysqueezebox import async_discover
+from pysqueezebox import Player, Server, async_discover
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -52,6 +52,7 @@ from .browse_media import (
     media_source_content_filter,
 )
 from .const import (
+    DATA_SERVER,
     DISCOVERY_TASK,
     DOMAIN,
     KNOWN_PLAYERS,
@@ -121,7 +122,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up an player discovery from a config entry."""
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
-    lms = hass.data[DOMAIN][entry.entry_id]["server"]
+    lms = entry.runtime_data[DATA_SERVER]
 
     async def _player_discovery(now=None):
         """Discover squeezebox players by polling server."""
@@ -152,7 +153,7 @@ async def async_setup_entry(
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
-        hass.data[DOMAIN][entry.entry_id][PLAYER_DISCOVERY_UNSUB] = (
+        entry.runtime_data[PLAYER_DISCOVERY_UNSUB] = (
             async_call_later(hass, DISCOVERY_INTERVAL, _player_discovery)
         )
 
@@ -224,7 +225,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     _last_update: datetime | None = None
     _attr_available = True
 
-    def __init__(self, player, server):
+    def __init__(self, player: Player, server: Server):
         """Initialize the SqueezeBox device."""
         self._player = player
         self._server = server
@@ -252,7 +253,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Make a player available again."""
         if unique_id == self.unique_id and connected:
             self._attr_available = True
-            _LOGGER.info("Player %s is available again", self.name)
+            _LOGGER.debug("Player %s is available again", self.name)
             self._remove_dispatcher()
 
     @property
@@ -273,7 +274,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             if self.media_position != last_media_position:
                 self._last_update = utcnow()
             if self._player.connected is False:
-                _LOGGER.info("Player %s is not available on %s", self.name,self._server.name)
+                _LOGGER.debug("Player %s is not available on %s", self.name,self._server.name)
                 self._attr_available = False
 
                 # start listening for restored players
@@ -560,8 +561,8 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             if other_player_id := player_ids.get(other_player):
                 await self._player.async_sync(other_player_id)
             else:
-                _LOGGER.info(
-                    "Could not find player_id for %s. Not syncing", other_player
+                _LOGGER.error(
+                    "Could not find player_id for %s. Not syncing with %s", other_player, self._player
                 )
 
     async def async_sync(self, other_player):
@@ -618,7 +619,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             image_url = self._player.generate_image_url_from_track_id(media_image_id)
             result = await self._async_fetch_image(image_url)
             if result == (None, None):
-                _LOGGER.debug("Error retrieving proxied album art from %s", image_url)
+                _LOGGER.warning("Error retrieving proxied album art from %s", image_url)
             return result
 
         return (None, None)

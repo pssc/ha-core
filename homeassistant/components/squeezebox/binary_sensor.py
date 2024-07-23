@@ -16,7 +16,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     DATA_COORDINATOR,
     DATA_DEVICE,
-    DOMAIN,
     STATUS_SENSOR_NEEDSRESTART,
     STATUS_SENSOR_RESCAN,
 )
@@ -41,8 +40,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Platform setup using common elements."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
-    device = hass.data[DOMAIN][entry.entry_id][DATA_DEVICE]
+    coordinator = entry.runtime_data[DATA_COORDINATOR]
+    device = entry.runtime_data[DATA_DEVICE]
 
     async_add_entities(
         ServerStatusBinarySensor(device, coordinator, description)
