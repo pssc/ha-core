@@ -153,7 +153,7 @@ async def async_setup_entry(
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
-        entry.runtime_data[PLAYER_DISCOVERY_UNSUB] = (
+         entry.async_on_unload(
             async_call_later(hass, DISCOVERY_INTERVAL, _player_discovery)
         )
 
@@ -236,7 +236,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=player.name,
             via_device=(DOMAIN, server.uuid),
-            connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)}
+            connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
         )
 
     @property

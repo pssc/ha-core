@@ -110,7 +110,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     # Stop player discovery task for this config entry.
     _LOGGER.debug("Reached async_unload_entry for LMS=%s(%s)", entry.runtime_data[DATA_SERVER].name or "Unkown" ,entry.entry_id)
-    entry.runtime_data[PLAYER_DISCOVERY_UNSUB]()
 
     # Remove redunant server/devices revmoves devices with no entities.
     device_reg = dr.async_get(hass)
