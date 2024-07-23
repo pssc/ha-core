@@ -5,6 +5,9 @@ from datetime import timedelta
 import logging
 import re
 
+from pysqueezebox import Server
+
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -29,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
     """LMS Status custom coordinator."""
 
-    def __init__(self, hass, my_api):
+    def __init__(self, hass: HomeAssistant, my_api: Server) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,

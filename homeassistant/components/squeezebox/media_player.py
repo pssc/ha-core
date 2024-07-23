@@ -21,7 +21,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -45,6 +45,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
 from homeassistant.util.dt import utcnow
 
+from . import SqueezeboxConfigEntry
 from .browse_media import (
     build_item_response,
     generate_playlist,
@@ -52,11 +53,9 @@ from .browse_media import (
     media_source_content_filter,
 )
 from .const import (
-    DATA_SERVER,
     DISCOVERY_TASK,
     DOMAIN,
     KNOWN_PLAYERS,
-    PLAYER_DISCOVERY_UNSUB,
     SQUEEZEBOX_SOURCE_STRINGS,
 )
 
@@ -117,12 +116,12 @@ async def start_server_discovery(hass: HomeAssistant) -> None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SqueezeboxConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up an player discovery from a config entry."""
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
-    lms = entry.runtime_data[DATA_SERVER]
+    lms = entry.runtime_data.server
 
     async def _player_discovery(now=None):
         """Discover squeezebox players by polling server."""

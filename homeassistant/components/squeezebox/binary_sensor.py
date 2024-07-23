@@ -9,17 +9,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DATA_COORDINATOR,
-    DATA_DEVICE,
-    STATUS_SENSOR_NEEDSRESTART,
-    STATUS_SENSOR_RESCAN,
-)
+from . import SqueezeboxConfigEntry
+from .const import STATUS_SENSOR_NEEDSRESTART, STATUS_SENSOR_RESCAN
+from .coordinator import LMSStatusDataUpdateCoordinator
 
 SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
@@ -37,15 +33,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SqueezeboxConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Platform setup using common elements."""
-    coordinator = entry.runtime_data[DATA_COORDINATOR]
-    device = entry.runtime_data[DATA_DEVICE]
 
     async_add_entities(
-        ServerStatusBinarySensor(device, coordinator, description)
+        ServerStatusBinarySensor(
+            entry.runtime_data.device, entry.runtime_data.coordinator, description
+        )
         for description in SENSORS
     )
 
@@ -55,7 +51,12 @@ class ServerStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device, coordinator, description) -> None:
+    def __init__(
+        self,
+        device,
+        coordinator: LMSStatusDataUpdateCoordinator,
+        description: BinarySensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, context=description.key)
         self.coordinator = coordinator

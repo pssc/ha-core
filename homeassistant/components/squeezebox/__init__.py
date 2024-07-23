@@ -1,6 +1,7 @@
 """The Squeezebox integration."""
 
 from asyncio import timeout
+from dataclasses import dataclass
 import logging
 
 from pysqueezebox import Server
@@ -25,13 +26,9 @@ from homeassistant.helpers.device_registry import (
 
 from .const import (
     CONF_HTTPS,
-    DATA_COORDINATOR,
-    DATA_DEVICE,
-    DATA_SERVER,
     DISCOVERY_TASK,
     DOMAIN,
     MANUFACTURER,
-    PLAYER_DISCOVERY_UNSUB,
     SERVER_MODEL,
     STATUS_API_TIMEOUT,
     STATUS_QUERY_LIBRARYNAME,
@@ -46,7 +43,19 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SENSOR, Platform.BINARY_SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class SqueezeboxData:
+    """SqueezeboxData data class."""
+
+    coordinator: LMSStatusDataUpdateCoordinator
+    server: Server
+    device: DeviceInfo
+
+
+type SqueezeboxConfigEntry = ConfigEntry[SqueezeboxData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> bool:
     """Set up an LMS Server from a config entry."""
     config = entry.data
     session = async_get_clientsession(hass)
@@ -101,13 +110,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         and {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}
         or None,
     )
+    # use this?
+    # device_registry = dr.async_get(hass)
+    # device_registry.async_get_or_create(device)
     _LOGGER.debug("LMS Device %s", device)
 
     coordinator = LMSStatusDataUpdateCoordinator(hass, lms)
 
-    entry.runtime_data[DATA_COORDINATOR] = coordinator
-    entry.runtime_data[DATA_DEVICE] = device
-    entry.runtime_data[DATA_SERVER] = lms
+    entry.runtime_data = SqueezeboxData(
+        coordinator=coordinator,
+        device=device,
+        server=lms,
+    )
 
     await coordinator.async_config_entry_first_refresh()
     # Make sure data is present before we add the server status sensors
@@ -124,7 +138,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Stop player discovery task for this config entry.
     _LOGGER.debug(
         "Reached async_unload_entry for LMS=%s(%s)",
-        entry.runtime_data[DATA_SERVER].name or "Unkown",
+        entry.runtime_data.server.name or "Unkown",
         entry.entry_id,
     )
 

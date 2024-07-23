@@ -10,15 +10,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SqueezeboxConfigEntry
 from .const import (
-    DATA_COORDINATOR,
-    DATA_DEVICE,
     STATUS_SENSOR_INFO_TOTAL_ALBUMS,
     STATUS_SENSOR_INFO_TOTAL_ARTISTS,
     STATUS_SENSOR_INFO_TOTAL_DURATION,
@@ -30,6 +28,7 @@ from .const import (
     STATUS_SENSOR_OTHER_PLAYER_COUNT,
     STATUS_SENSOR_PLAYER_COUNT,
 )
+from .coordinator import LMSStatusDataUpdateCoordinator
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -88,16 +87,16 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SqueezeboxConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Platform setup using common elements."""
 
-    coordinator = entry.runtime_data[DATA_COORDINATOR]
-    device = entry.runtime_data[DATA_DEVICE]
-
     async_add_entities(
-        ServerStatusSensor(device, coordinator, description) for description in SENSORS
+        ServerStatusSensor(
+            entry.runtime_data.device, entry.runtime_data.coordinator, description
+        )
+        for description in SENSORS
     )
 
 
@@ -106,7 +105,12 @@ class ServerStatusSensor(CoordinatorEntity, SensorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device, coordinator, description) -> None:
+    def __init__(
+        self,
+        device,
+        coordinator: LMSStatusDataUpdateCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor using description, device and coordinator data."""
         super().__init__(coordinator, context=description.key)
         self.entity_description = description
