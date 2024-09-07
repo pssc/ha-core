@@ -134,11 +134,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) 
         entry.entry_id,
     )
 
-    # Stop server discovery task if this is the last config entry.
+    platforms = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    # Stop server discovery task if this is the last config entry and remove any state.
     current_entries = hass.config_entries.async_entries(DOMAIN)
-    if len(current_entries) == 1 and current_entries[0] == entry:
-        _LOGGER.debug("Stopping server discovery task")
+    if len(current_entries) == 1 and current_entries[0] == entry and platforms:
+        _LOGGER.debug("unloading last entry stopping server discovery")
         hass.data[DOMAIN][DISCOVERY_TASK].cancel()
         hass.data[DOMAIN].pop(DISCOVERY_TASK)
+        hass.data.pop(DOMAIN)
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return platforms
